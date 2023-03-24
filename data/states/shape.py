@@ -23,15 +23,16 @@ class Shape:
         self.position = pg.Vector2(2, 0)
 
     @property
-    def vertical_element_count(self):
-        return len(self.shape)
-
-    @property
-    def horizontal_element_count(self):
+    def width(self):
         return len(self.shape[0])
 
-    def rotate(self):
-        self.shape = list(zip(*self.shape[::-1]))
+    @property
+    def height(self):
+        return len(self.shape)
+
+    def rotate(self, space):
+        if self.height <= space:
+            self.shape = list(zip(*self.shape[::-1]))
 
     def move(self, delta):
         self.position += delta

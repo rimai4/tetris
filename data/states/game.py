@@ -52,10 +52,11 @@ class Game(BaseState):
     def handle_event(self, event):
         if event.type == pg.KEYDOWN:
             if event.key == pg.K_SPACE:
-                self.current_element.rotate()
+                space = self.columns - self.current_element.position.x
+                self.current_element.rotate(space)
             if event.key == pg.K_DOWN:
                 self.current_element.move(Vector2(0, 1))
-                max_position = self.rows - self.current_element.vertical_element_count
+                max_position = self.rows - self.current_element.height
                 if self.current_element.position.y == max_position:
                     self.placed_elements.append(self.current_element)
                     self.current_element = self.element_queue.pop(0)
@@ -66,9 +67,7 @@ class Game(BaseState):
                 if self.current_element.position.x >= 1:
                     self.current_element.move(Vector2(-1, 0))
             if event.key == pg.K_RIGHT:
-                max_position = (
-                    self.columns - self.current_element.horizontal_element_count
-                )
+                max_position = self.columns - self.current_element.width
                 if self.current_element.position.x < max_position:
                     self.current_element.move(Vector2(1, 0))
 
