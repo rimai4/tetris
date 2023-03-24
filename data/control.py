@@ -31,7 +31,7 @@ class Control:
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 self.done = True
-            self.state.get_event(event)
+            self.state.handle_event(event)
 
     def game_loop(self):
         while not self.done:

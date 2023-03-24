@@ -15,7 +15,7 @@ columns = 8
 block_size = 60
 top_bar_height = block_size
 vertical_margin = 20
-horizontal_margin = 20
+horizontal_margin = block_size // 2
 side_bar_width = (4 * block_size) + (2 * horizontal_margin)
 screen_height = (
     vertical_margin
@@ -32,7 +32,7 @@ screen_width = (
     + horizontal_margin
 )
 size = (screen_width, screen_height)
-fps = 1
+fps = 60
 
 app = Control(size, fps)
 game = Game(
@@ -44,6 +44,7 @@ game = Game(
     vertical_margin,
     horizontal_margin,
 )
+
 state_dict = {
     "start": StartMenu(size),
     "game": game,

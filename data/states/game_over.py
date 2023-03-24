@@ -11,7 +11,7 @@ class GameOverScreen(BaseState):
         self.game = game
         self.high_scores = []
 
-    def get_event(self, event):
+    def handle_event(self, event):
         if event.type == pygame.KEYDOWN and event.key == pygame.K_SPACE:
             self.switch_state()
 

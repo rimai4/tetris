@@ -13,7 +13,7 @@ class BaseState:
         )
         self.font = pygame.font.Font(os.path.join("resources", "retro-gaming.ttf"), 16)
 
-    def get_event(self, event):
+    def handle_event(self, event):
         pass
 
     def update(self, screen, dt):

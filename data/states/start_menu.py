@@ -12,7 +12,7 @@ class StartMenu(BaseState):
         self.next = "game"
         self.screen_width, self.screen_height = size
 
-    def get_event(self, event):
+    def handle_event(self, event):
         if event.type == pygame.KEYDOWN and event.key == pygame.K_SPACE:
             self.switch_state()
 
