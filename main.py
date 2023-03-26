@@ -12,7 +12,7 @@ pg.display.set_caption("Tetris")
 
 rows = 12
 columns = 8
-block_size = 60
+block_size = 40
 top_bar_height = block_size
 vertical_margin = 20
 horizontal_margin = block_size // 2

@@ -1,12 +1,15 @@
-import os
 import random
+from collections import namedtuple
 
 import pygame as pg
-from pygame.math import Vector2
+from pygame import Vector2
 
 from data.colors import Colors
 from data.states.base_state import BaseState
-from data.states.shape import SHAPES, Shape
+from data.states.events import MOVE_MAIN_ELEMENT
+from data.states.shape import Shape
+
+PlacedBlock = namedtuple("PlacedBlock", ["position", "color"])
 
 
 class Game(BaseState):
@@ -32,7 +35,7 @@ class Game(BaseState):
         self.main_screen_height = rows * block_size
 
         self.current_element = Shape(Colors.get_random_color(), self.block_size)
-        self.placed_elements = []
+        self.placed_blocks = []
 
         self.element_queue = [
             Shape(Colors.get_random_color(), self.block_size),
@@ -49,35 +52,37 @@ class Game(BaseState):
             (self.side_bar_width, self.main_screen_height)
         )
 
-    def handle_event(self, event):
-        if event.type == pg.KEYDOWN:
-            if event.key == pg.K_SPACE:
-                space = self.columns - self.current_element.position.x
-                self.current_element.rotate(space)
-            if event.key == pg.K_DOWN:
-                self.current_element.move(Vector2(0, 1))
-                max_position = self.rows - self.current_element.height
-                if self.current_element.position.y == max_position:
-                    self.placed_elements.append(self.current_element)
-                    self.current_element = self.element_queue.pop(0)
-                    self.element_queue.append(
-                        Shape(Colors.get_random_color(), self.block_size)
-                    )
-            if event.key == pg.K_LEFT:
-                if self.current_element.position.x >= 1:
-                    self.current_element.move(Vector2(-1, 0))
-            if event.key == pg.K_RIGHT:
-                max_position = self.columns - self.current_element.width
-                if self.current_element.position.x < max_position:
-                    self.current_element.move(Vector2(1, 0))
+    @property
+    def placed_coordinates(self):
+        return list(map(lambda x: x.position, self.placed_blocks))
 
-    def draw_placed_elements(self):
-        for element in self.placed_elements:
-            element.draw(
-                self.main_screen,
-                element.position.x * self.block_size,
-                element.position.y * self.block_size,
-            )
+    def setup(self):
+        pg.time.set_timer(MOVE_MAIN_ELEMENT, 700)
+
+    def place_current_element(self):
+        self.add_placed_blocks()
+        self.current_element = self.element_queue.pop(0)
+        self.element_queue.append(Shape(Colors.get_random_color(), self.block_size))
+
+    def add_placed_blocks(self):
+        coordinates = self.current_element.get_coordinates()
+        for c in coordinates:
+            placed_block = PlacedBlock(c, self.current_element.color)
+            self.placed_blocks.append(placed_block)
+
+    def draw_placed_blocks(self):
+        for block in self.placed_blocks:
+            self.draw_placed_block(block)
+
+    def draw_placed_block(self, block):
+        rect = pg.rect.Rect(
+            block.position.x * self.block_size,
+            block.position.y * self.block_size,
+            self.block_size,
+            self.block_size,
+        )
+        pg.draw.rect(self.main_screen, block.color, rect)
+        pg.draw.rect(self.main_screen, Colors.GREY, rect, width=2)
 
     def update(self, screen):
         screen.fill(Colors.BLACK)
@@ -104,6 +109,56 @@ class Game(BaseState):
             ),
         )
 
+    def move_down(self):
+        bottom_reached = (
+            self.rows - self.current_element.height == self.current_element.position.y
+        )
+        collision = self.current_element.check_collision(
+            self.placed_coordinates, Vector2(0, 1)
+        )
+
+        if bottom_reached or collision:
+            self.place_current_element()
+        else:
+            self.current_element.move(Vector2(0, 1))
+
+    def move_left(self):
+        if (
+            self.current_element.position.x >= 1
+            and not self.current_element.check_collision(
+                self.placed_coordinates, Vector2(-1, 0)
+            )
+        ):
+            self.current_element.move(Vector2(-1, 0))
+
+    def move_right(self):
+        max_position = self.columns - self.current_element.width
+        if (
+            self.current_element.position.x < max_position
+            and not self.current_element.check_collision(
+                self.placed_coordinates, Vector2(1, 0)
+            )
+        ):
+            self.current_element.move(Vector2(1, 0))
+
+    def handle_event(self, event):
+        if event.type == MOVE_MAIN_ELEMENT:
+            self.move_down()
+        if event.type == pg.KEYDOWN:
+            if event.key == pg.K_SPACE:
+                horizontal_space = self.columns - self.current_element.position.x
+                vertical_space = self.rows - self.current_element.position.y
+                self.current_element.rotate(
+                    horizontal_space, vertical_space, self.placed_coordinates
+                )
+            if event.key == pg.K_DOWN:
+                self.move_down()
+
+            if event.key == pg.K_LEFT:
+                self.move_left()
+            if event.key == pg.K_RIGHT:
+                self.move_right()
+
     def draw_top_bar(self):
         rect = self.top_bar.get_rect()
         pg.draw.rect(self.top_bar, Colors.GREY, rect, width=2)
@@ -118,7 +173,7 @@ class Game(BaseState):
             self.current_element.position.x * self.block_size,
             self.current_element.position.y * self.block_size,
         )
-        self.draw_placed_elements()
+        self.draw_placed_blocks()
 
     def draw_side_bar(self):
         self.side_bar.fill(Colors.BLACK)
